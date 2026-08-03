@@ -1,0 +1,137 @@
+project_name: "Chetan Dabhi — Portfolio"
+last_updated: "2026-08-03"
+overview: >
+  A React + Vite single-page portfolio website with a hacker/terminal aesthetic,
+  featuring client-side routing (react-router-dom), live GitHub repo fetching,
+  a typewriter-animated About terminal, skills listing, contact form, and
+  dark/light theme toggle.
+
+modules:
+  # ── Build & Config ──────────────────────────────────────────────
+  - path: "package.json"
+    purpose: "Defines project metadata, scripts (dev/build/preview), and dependencies (React 19, react-router-dom, Vite 8)."
+    exports: []
+    dependencies: []
+
+  - path: "vite.config.js"
+    purpose: "Vite build configuration — enables the React plugin."
+    exports:
+      - "default (defineConfig)"
+    dependencies: []
+
+  - path: "index.html"
+    purpose: "HTML entry point — mounts #root, loads Fira Code from Google Fonts, includes SEO meta tags."
+    exports: []
+    dependencies:
+      - "src/main.jsx"
+
+  # ── Application Entry ───────────────────────────────────────────
+  - path: "src/main.jsx"
+    purpose: "React DOM entry — wraps <App /> in StrictMode and BrowserRouter."
+    exports: []
+    dependencies:
+      - "src/index.css"
+      - "src/App.jsx"
+
+  - path: "src/index.css"
+    purpose: "Global stylesheet — terminal/hacker design tokens, component styles (header, navbar, terminal, projects, spinner, error panel, footer), animations (flicker, scanline, fadeSlideIn), dark/light theme variables."
+    exports: []
+    dependencies: []
+
+  - path: "src/App.jsx"
+    purpose: "Root component — holds student data, skills array, dark/light theme state, applies body theme styles, composes Header → NavBar → Routes (/, /projects, /contact, *) → Footer."
+    exports:
+      - "App"
+    dependencies:
+      - "src/components/Header.jsx"
+      - "src/components/NavBar.jsx"
+      - "src/components/Home.jsx"
+      - "src/components/Projects.jsx"
+      - "src/components/Contact.jsx"
+      - "src/components/NotFound.jsx"
+      - "src/components/Footer.jsx"
+
+  # ── Page-Level Components ───────────────────────────────────────
+  - path: "src/components/Home.jsx"
+    purpose: "Home route — composes <About /> and <Skills /> sections on the landing page."
+    exports:
+      - "Home"
+    dependencies:
+      - "src/components/About.jsx"
+      - "src/components/Skills.jsx"
+
+  - path: "src/components/Projects.jsx"
+    purpose: "Projects route — fetches GitHub repos from api.github.com, manages loading/error/search state, renders Spinner, ErrorMessage, or RepoList."
+    exports:
+      - "Projects"
+    dependencies:
+      - "src/components/Spinner.jsx"
+      - "src/components/ErrorMessage.jsx"
+      - "src/components/RepoList.jsx"
+
+  - path: "src/components/Contact.jsx"
+    purpose: "Contact route — textarea with character count, focus-triggered help tip, and alert-based submit."
+    exports:
+      - "Contact"
+    dependencies: []
+
+  # ── UI Components ───────────────────────────────────────────────
+  - path: "src/components/Header.jsx"
+    purpose: "Site header — displays student name (prop-colored) and subtitle tagline."
+    exports:
+      - "Header"
+    dependencies: []
+
+  - path: "src/components/NavBar.jsx"
+    purpose: "Navigation bar — NavLinks to /, /projects, /contact with active-state styling, plus a dark/light theme toggle button."
+    exports:
+      - "NavBar"
+    dependencies: []
+
+  - path: "src/components/About.jsx"
+    purpose: "About section — animated terminal emulator that types out bio commands/outputs line-by-line with typewriter effect, blinking cursor, and auto-scroll."
+    exports:
+      - "About"
+    dependencies: []
+
+  - path: "src/components/Skills.jsx"
+    purpose: "Skills section — renders a list of skill strings received via props."
+    exports:
+      - "Skills"
+    dependencies: []
+
+  - path: "src/components/RepoList.jsx"
+    purpose: "Renders a grid of GitHub repository cards with terminal-styled title bars, star count, language tag, and git-clone link."
+    exports:
+      - "RepoList"
+    dependencies: []
+
+  - path: "src/components/Spinner.jsx"
+    purpose: "Loading indicator — terminal-styled panel with animated dots and a scanline bar."
+    exports:
+      - "Spinner"
+    dependencies: []
+
+  - path: "src/components/ErrorMessage.jsx"
+    purpose: "Error display — terminal-styled error panel with [ERROR] label, message, hint, and a retry button."
+    exports:
+      - "ErrorMessage"
+    dependencies: []
+
+  - path: "src/components/Footer.jsx"
+    purpose: "Site footer — displays dynamic © year and author name."
+    exports:
+      - "Footer"
+    dependencies: []
+
+  - path: "src/components/NotFound.jsx"
+    purpose: "404 catch-all route — red glowing 404 heading with 'ROUTE NOT FOUND' message."
+    exports:
+      - "NotFound"
+    dependencies: []
+
+  # ── Static Assets ───────────────────────────────────────────────
+  - path: "public/kali-logo.png"
+    purpose: "Kali Linux logo image asset (unused in current components)."
+    exports: []
+    dependencies: []
