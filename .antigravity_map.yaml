@@ -1,5 +1,5 @@
 project_name: "Chetan Dabhi — Portfolio"
-last_updated: "2026-08-03"
+last_updated: "2026-08-06"
 overview: >
   A React + Vite single-page portfolio website with a hacker/terminal aesthetic,
   featuring client-side routing (react-router-dom), live GitHub repo fetching,
@@ -133,5 +133,22 @@ modules:
   # ── Static Assets ───────────────────────────────────────────────
   - path: "public/kali-logo.png"
     purpose: "Kali Linux logo image asset (unused in current components)."
+    exports: []
+    dependencies: []
+
+  # ── Practical 4 — Task Manager REST API ─────────────────────
+  - path: "task-manager-api/package.json"
+    purpose: "Node project config for Practical 4 — defines Express dependency and start script."
+    exports: []
+    dependencies: []
+
+  - path: "task-manager-api/server.js"
+    purpose: "Express REST API — CRUD endpoints for Task Management (GET/POST/PUT/DELETE /tasks), request logging middleware, Content-Type validation middleware, route-specific ID validation, 404 handler, and global error handler."
+    exports: []
+    dependencies:
+      - "task-manager-api/package.json"
+
+  - path: "task-manager-api/.gitignore"
+    purpose: "Excludes node_modules from version control."
     exports: []
     dependencies: []
