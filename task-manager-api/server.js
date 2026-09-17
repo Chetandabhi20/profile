@@ -1,24 +1,29 @@
 // ============================================================
-// Practical 4 — Task Management RESTful API
-// Express.js | In-Memory CRUD | Middleware Pipeline
+// Practical 5 + 6 — Task Management RESTful API (MongoDB Edition)
+// Express.js | Mongoose ODM | MongoDB Atlas | CORS enabled
 // ============================================================
 
+require('dotenv').config();
 const express = require('express');
-const app = express();
-const PORT = 5000;
+const mongoose = require('mongoose');
+const cors = require('cors');               // ← Practical 6: CORS
+const connectDB = require('./config/db');
+const Task = require('./models/Task');
 
-// ── In-Memory Data Store ─────────────────────────────────────
-let tasks = [
-  { id: 1, title: 'Learn Express.js', completed: false },
-  { id: 2, title: 'Build REST API',   completed: false },
-];
-let nextId = 3;
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// ── Connect to MongoDB ──────────────────────────────────────
+connectDB();
 
 // =============================================================
 // MIDDLEWARE PIPELINE (order matters!)
 // =============================================================
 
-// 1. Parse incoming JSON bodies
+// 1. Enable CORS — allows React dev server (localhost:5173) to call this API
+app.use(cors());
+
+// 2. Parse incoming JSON bodies
 app.use(express.json());
 
 // 2. Request Logging Middleware (Global)
@@ -43,17 +48,14 @@ app.use((req, res, next) => {
 });
 
 // ── Route-Specific Middleware ────────────────────────────────
-// Validates that :id is a positive integer before the controller runs.
-function validateTaskId(req, res, next) {
-  const id = Number(req.params.id);
-  if (!Number.isInteger(id) || id <= 0) {
+// Validates that :id is a valid MongoDB ObjectId.
+function validateObjectId(req, res, next) {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
     return res.status(400).json({
       error: 'Bad Request',
-      message: `Invalid task ID "${req.params.id}". ID must be a positive integer.`,
+      message: `Invalid task ID "${req.params.id}". Must be a valid MongoDB ObjectId.`,
     });
   }
-  // Attach parsed id so controllers don't need to parse again
-  req.taskId = id;
   next();
 }
 
@@ -62,78 +64,100 @@ function validateTaskId(req, res, next) {
 // =============================================================
 
 // GET /tasks — Retrieve all tasks
-app.get('/tasks', (req, res) => {
-  res.status(200).json({
-    success: true,
-    count: tasks.length,
-    data: tasks,
-  });
+app.get('/tasks', async (req, res, next) => {
+  try {
+    const tasks = await Task.find().sort({ createdAt: -1 });
+    res.status(200).json({
+      success: true,
+      count: tasks.length,
+      data: tasks,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /tasks/:id — Retrieve a single task by ID
+app.get('/tasks/:id', validateObjectId, async (req, res, next) => {
+  try {
+    const task = await Task.findById(req.params.id);
+
+    if (!task) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: `Task with ID ${req.params.id} not found.`,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: task,
+    });
+  } catch (err) {
+    next(err);
+  }
 });
 
 // POST /tasks — Create a new task
-app.post('/tasks', (req, res) => {
-  const { title, completed } = req.body;
-
-  if (!title || typeof title !== 'string' || title.trim() === '') {
-    return res.status(400).json({
-      error: 'Validation Error',
-      message: 'Field "title" is required and must be a non-empty string.',
+app.post('/tasks', async (req, res, next) => {
+  try {
+    const newTask = await Task.create(req.body);
+    res.status(201).json({
+      success: true,
+      message: 'Task created successfully',
+      data: newTask,
     });
+  } catch (err) {
+    next(err);
   }
-
-  const newTask = {
-    id: nextId++,
-    title: title.trim(),
-    completed: typeof completed === 'boolean' ? completed : false,
-  };
-
-  tasks.push(newTask);
-  res.status(201).json({
-    success: true,
-    message: 'Task created successfully',
-    data: newTask,
-  });
 });
 
 // PUT /tasks/:id — Update an existing task
-app.put('/tasks/:id', validateTaskId, (req, res) => {
-  const task = tasks.find((t) => t.id === req.taskId);
+app.put('/tasks/:id', validateObjectId, async (req, res, next) => {
+  try {
+    const task = await Task.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { returnDocument: 'after', runValidators: true }
+    );
 
-  if (!task) {
-    return res.status(404).json({
-      error: 'Not Found',
-      message: `Task with ID ${req.taskId} not found.`,
+    if (!task) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: `Task with ID ${req.params.id} not found.`,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Task updated successfully',
+      data: task,
     });
+  } catch (err) {
+    next(err);
   }
-
-  const { title, completed } = req.body;
-  if (title !== undefined) task.title = String(title).trim();
-  if (completed !== undefined) task.completed = Boolean(completed);
-
-  res.status(200).json({
-    success: true,
-    message: 'Task updated successfully',
-    data: task,
-  });
 });
 
 // DELETE /tasks/:id — Delete a task
-app.delete('/tasks/:id', validateTaskId, (req, res) => {
-  const index = tasks.findIndex((t) => t.id === req.taskId);
+app.delete('/tasks/:id', validateObjectId, async (req, res, next) => {
+  try {
+    const task = await Task.findByIdAndDelete(req.params.id);
 
-  if (index === -1) {
-    return res.status(404).json({
-      error: 'Not Found',
-      message: `Task with ID ${req.taskId} not found.`,
+    if (!task) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: `Task with ID ${req.params.id} not found.`,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Task deleted successfully',
+      data: task,
     });
+  } catch (err) {
+    next(err);
   }
-
-  const deleted = tasks.splice(index, 1)[0];
-  res.status(200).json({
-    success: true,
-    message: 'Task deleted successfully',
-    data: deleted,
-  });
 });
 
 // =============================================================
@@ -151,6 +175,24 @@ app.use((req, res, next) => {
 // Global Error Handler — catches any unhandled errors passed via next(err)
 // Must have exactly 4 parameters so Express recognises it as an error handler.
 app.use((err, req, res, next) => {
+  // ── Mongoose Validation Error ────────────────────────────────
+  if (err.name === 'ValidationError') {
+    const messages = Object.values(err.errors).map((e) => e.message);
+    return res.status(400).json({
+      error: 'Validation Error',
+      messages,
+    });
+  }
+
+  // ── Mongoose Cast Error (invalid ObjectId in body) ───────────
+  if (err.name === 'CastError') {
+    return res.status(400).json({
+      error: 'Bad Request',
+      message: `Invalid value "${err.value}" for field "${err.path}".`,
+    });
+  }
+
+  // ── Generic Server Error ─────────────────────────────────────
   console.error('[ERROR]', err.stack);
   res.status(500).json({
     error: 'Internal Server Error',
@@ -167,6 +209,7 @@ app.listen(PORT, () => {
   console.log(`✔  Task Manager API running → http://localhost:${PORT}`);
   console.log('   Endpoints:');
   console.log('   GET    /tasks');
+  console.log('   GET    /tasks/:id');
   console.log('   POST   /tasks');
   console.log('   PUT    /tasks/:id');
   console.log('   DELETE /tasks/:id');

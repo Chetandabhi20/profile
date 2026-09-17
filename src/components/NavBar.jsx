@@ -17,6 +17,12 @@ function NavBar({ isDarkMode, toggleTheme }) {
         Projects
       </NavLink>
       <NavLink 
+        to="/tasks" 
+        className={({ isActive }) => `navbar__link${isActive ? ' navbar__link--active' : ''}`}
+      >
+        Tasks
+      </NavLink>
+      <NavLink 
         to="/contact" 
         className={({ isActive }) => `navbar__link${isActive ? ' navbar__link--active' : ''}`}
       >

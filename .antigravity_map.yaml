@@ -1,12 +1,26 @@
 project_name: "Chetan Dabhi — Portfolio"
-last_updated: "2026-08-06"
+last_updated: "2026-09-17"
 overview: >
   A React + Vite single-page portfolio website with a hacker/terminal aesthetic,
   featuring client-side routing (react-router-dom), live GitHub repo fetching,
-  a typewriter-animated About terminal, skills listing, contact form, and
-  dark/light theme toggle.
+  a typewriter-animated About terminal, skills listing, contact form,
+  dark/light theme toggle, and a full-stack Task Manager (Practical 6)
+  wired to a Node/Express/MongoDB backend via CORS-enabled REST API.
 
 modules:
+  # ── Agent Rules ────────────────────────────────────────────────
+  - path: "GEMINI.md"
+    purpose: "Agent rules file for Gemini-based agents — enforces Read-First and Update-on-Write protocols using .antigravity_map.yaml."
+    exports: []
+    dependencies:
+      - ".antigravity_map.yaml"
+
+  - path: "AGENTS.md"
+    purpose: "Agent rules file for non-Gemini agents (Copilot, Cursor, Cline) — identical to GEMINI.md for cross-agent compatibility."
+    exports: []
+    dependencies:
+      - ".antigravity_map.yaml"
+
   # ── Build & Config ──────────────────────────────────────────────
   - path: "package.json"
     purpose: "Defines project metadata, scripts (dev/build/preview), and dependencies (React 19, react-router-dom, Vite 8)."
@@ -34,12 +48,12 @@ modules:
       - "src/App.jsx"
 
   - path: "src/index.css"
-    purpose: "Global stylesheet — terminal/hacker design tokens, component styles (header, navbar, terminal, projects, spinner, error panel, footer), animations (flicker, scanline, fadeSlideIn), dark/light theme variables."
+    purpose: "Global stylesheet — terminal/hacker design tokens, component styles (header, navbar, terminal, projects, spinner, error panel, footer, task-form, task-card, toast), animations, dark/light theme variables."
     exports: []
     dependencies: []
 
   - path: "src/App.jsx"
-    purpose: "Root component — holds student data, skills array, dark/light theme state, applies body theme styles, composes Header → NavBar → Routes (/, /projects, /contact, *) → Footer."
+    purpose: "Root component — holds student data, skills array, dark/light theme state, applies body theme styles, composes Header → NavBar → Routes (/, /projects, /tasks, /contact, *) → Footer."
     exports:
       - "App"
     dependencies:
@@ -47,9 +61,20 @@ modules:
       - "src/components/NavBar.jsx"
       - "src/components/Home.jsx"
       - "src/components/Projects.jsx"
+      - "src/components/Tasks.jsx"
       - "src/components/Contact.jsx"
       - "src/components/NotFound.jsx"
       - "src/components/Footer.jsx"
+
+  # ── Practical 6 — API Service Layer ─────────────────────────────
+  - path: "src/services/api.js"
+    purpose: "Central API service — single BASE_URL constant and five CRUD functions (getTasks, createTask, updateTask, deleteTask) using fetch."
+    exports:
+      - "getTasks"
+      - "createTask"
+      - "updateTask"
+      - "deleteTask"
+    dependencies: []
 
   # ── Page-Level Components ───────────────────────────────────────
   - path: "src/components/Home.jsx"
@@ -69,6 +94,18 @@ modules:
       - "src/components/ErrorMessage.jsx"
       - "src/components/RepoList.jsx"
 
+  - path: "src/components/Tasks.jsx"
+    purpose: "Practical 6 — Task Manager page orchestrator handling all CRUD state, loading/error per operation, toast notifications, confirmation dialog on delete, and re-fetch after every write."
+    exports:
+      - "Tasks"
+    dependencies:
+      - "src/services/api.js"
+      - "src/components/Spinner.jsx"
+      - "src/components/ErrorMessage.jsx"
+      - "src/components/TaskForm.jsx"
+      - "src/components/TaskList.jsx"
+      - "src/components/Toast.jsx"
+
   - path: "src/components/Contact.jsx"
     purpose: "Contact route — textarea with character count, focus-triggered help tip, and alert-based submit."
     exports:
@@ -83,7 +120,7 @@ modules:
     dependencies: []
 
   - path: "src/components/NavBar.jsx"
-    purpose: "Navigation bar — NavLinks to /, /projects, /contact with active-state styling, plus a dark/light theme toggle button."
+    purpose: "Navigation bar — NavLinks to /, /projects, /tasks, /contact with active-state styling, plus a dark/light theme toggle button."
     exports:
       - "NavBar"
     dependencies: []
@@ -104,6 +141,24 @@ modules:
     purpose: "Renders a grid of GitHub repository cards with terminal-styled title bars, star count, language tag, and git-clone link."
     exports:
       - "RepoList"
+    dependencies: []
+
+  - path: "src/components/TaskForm.jsx"
+    purpose: "Practical 6 — Terminal-styled create/edit form with title, description, priority fields, git-themed submit/cancel buttons, and per-operation loading state."
+    exports:
+      - "TaskForm"
+    dependencies: []
+
+  - path: "src/components/TaskList.jsx"
+    purpose: "Practical 6 — Renders terminal-styled task cards with priority badges, completed toggle, edit/delete actions, and empty state."
+    exports:
+      - "TaskList"
+    dependencies: []
+
+  - path: "src/components/Toast.jsx"
+    purpose: "Practical 6 — Auto-dismissing toast notification component (3s timeout) with success/error variants and slide animation."
+    exports:
+      - "Toast"
     dependencies: []
 
   - path: "src/components/Spinner.jsx"
@@ -136,19 +191,43 @@ modules:
     exports: []
     dependencies: []
 
-  # ── Practical 4 — Task Manager REST API ─────────────────────
+  # ── Practical 5 + 6 — Task Manager REST API (MongoDB Edition) ──
   - path: "task-manager-api/package.json"
-    purpose: "Node project config for Practical 4 — defines Express dependency and start script."
+    purpose: "Node project config — defines Express, Mongoose, cors, and dotenv dependencies with start/dev scripts."
     exports: []
+    dependencies: []
+
+  - path: "task-manager-api/.env"
+    purpose: "Environment variables — MongoDB Atlas connection string and port (git-ignored)."
+    exports: []
+    dependencies: []
+
+  - path: "task-manager-api/.env.example"
+    purpose: "Template for .env — redacted credentials for collaborators."
+    exports: []
+    dependencies: []
+
+  - path: "task-manager-api/.gitignore"
+    purpose: "Excludes node_modules and .env from version control."
+    exports: []
+    dependencies: []
+
+  - path: "task-manager-api/config/db.js"
+    purpose: "MongoDB connection module — connects to Atlas via Mongoose, logs host on success, exits on failure."
+    exports:
+      - "connectDB"
+    dependencies: []
+
+  - path: "task-manager-api/models/Task.js"
+    purpose: "Mongoose Task schema — 5 fields (title, description, completed, priority, createdAt) with required/enum/default constraints and pre-save trim hook."
+    exports:
+      - "Task (model)"
     dependencies: []
 
   - path: "task-manager-api/server.js"
-    purpose: "Express REST API — CRUD endpoints for Task Management (GET/POST/PUT/DELETE /tasks), request logging middleware, Content-Type validation middleware, route-specific ID validation, 404 handler, and global error handler."
+    purpose: "Express REST API — CORS-enabled, MongoDB-backed CRUD (GET/GET:id/POST/PUT/DELETE /tasks), Mongoose ODM, request logging, Content-Type validation, ObjectId validation, structured error handling."
     exports: []
     dependencies:
+      - "task-manager-api/config/db.js"
+      - "task-manager-api/models/Task.js"
       - "task-manager-api/package.json"
-
-  - path: "task-manager-api/.gitignore"
-    purpose: "Excludes node_modules from version control."
-    exports: []
-    dependencies: []
