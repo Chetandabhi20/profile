@@ -1,6 +1,7 @@
 // ============================================================
-// Practical 5 + 6 — Task Management RESTful API (MongoDB Edition)
+// Practical 5 + 6 + 7 — Task Management RESTful API
 // Express.js | Mongoose ODM | MongoDB Atlas | CORS enabled
+// + JWT Authentication | Input Validation | Middleware Pipeline
 // ============================================================
 
 require('dotenv').config();
@@ -9,6 +10,11 @@ const mongoose = require('mongoose');
 const cors = require('cors');               // ← Practical 6: CORS
 const connectDB = require('./config/db');
 const Task = require('./models/Task');
+
+// ── Practical 7 Imports ─────────────────────────────────────
+const authRoutes = require('./routes/auth');
+const authMiddleware = require('./middleware/auth');
+const { validateTask } = require('./middleware/validate');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -26,14 +32,14 @@ app.use(cors());
 // 2. Parse incoming JSON bodies
 app.use(express.json());
 
-// 2. Request Logging Middleware (Global)
+// 3. Request Logging Middleware (Global)
 //    Logs HTTP method, URL, and ISO timestamp for every request.
 app.use((req, res, next) => {
   console.log(`[LOG] ${req.method} ${req.url} - ${new Date().toISOString()}`);
   next();
 });
 
-// 3. Content-Type Validation Middleware (Global — POST/PUT only)
+// 4. Content-Type Validation Middleware (Global — POST/PUT only)
 //    Rejects POST and PUT requests that are missing
 //    the Content-Type: application/json header.
 app.use((req, res, next) => {
@@ -46,6 +52,11 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+// =============================================================
+// AUTH ROUTES (public — no token required)
+// =============================================================
+app.use('/auth', authRoutes);
 
 // ── Route-Specific Middleware ────────────────────────────────
 // Validates that :id is a valid MongoDB ObjectId.
@@ -60,11 +71,11 @@ function validateObjectId(req, res, next) {
 }
 
 // =============================================================
-// CRUD ROUTE HANDLERS
+// CRUD ROUTE HANDLERS (Practical 7: All protected by authMiddleware)
 // =============================================================
 
-// GET /tasks — Retrieve all tasks
-app.get('/tasks', async (req, res, next) => {
+// GET /tasks — Retrieve all tasks (🔒 Protected)
+app.get('/tasks', authMiddleware, async (req, res, next) => {
   try {
     const tasks = await Task.find().sort({ createdAt: -1 });
     res.status(200).json({
@@ -77,8 +88,8 @@ app.get('/tasks', async (req, res, next) => {
   }
 });
 
-// GET /tasks/:id — Retrieve a single task by ID
-app.get('/tasks/:id', validateObjectId, async (req, res, next) => {
+// GET /tasks/:id — Retrieve a single task by ID (🔒 Protected)
+app.get('/tasks/:id', authMiddleware, validateObjectId, async (req, res, next) => {
   try {
     const task = await Task.findById(req.params.id);
 
@@ -98,8 +109,8 @@ app.get('/tasks/:id', validateObjectId, async (req, res, next) => {
   }
 });
 
-// POST /tasks — Create a new task
-app.post('/tasks', async (req, res, next) => {
+// POST /tasks — Create a new task (🔒 Protected + ✅ Validated)
+app.post('/tasks', authMiddleware, validateTask, async (req, res, next) => {
   try {
     const newTask = await Task.create(req.body);
     res.status(201).json({
@@ -112,8 +123,8 @@ app.post('/tasks', async (req, res, next) => {
   }
 });
 
-// PUT /tasks/:id — Update an existing task
-app.put('/tasks/:id', validateObjectId, async (req, res, next) => {
+// PUT /tasks/:id — Update an existing task (🔒 Protected + ✅ Validated)
+app.put('/tasks/:id', authMiddleware, validateObjectId, validateTask, async (req, res, next) => {
   try {
     const task = await Task.findByIdAndUpdate(
       req.params.id,
@@ -138,8 +149,8 @@ app.put('/tasks/:id', validateObjectId, async (req, res, next) => {
   }
 });
 
-// DELETE /tasks/:id — Delete a task
-app.delete('/tasks/:id', validateObjectId, async (req, res, next) => {
+// DELETE /tasks/:id — Delete a task (🔒 Protected)
+app.delete('/tasks/:id', authMiddleware, validateObjectId, async (req, res, next) => {
   try {
     const task = await Task.findByIdAndDelete(req.params.id);
 
@@ -192,6 +203,15 @@ app.use((err, req, res, next) => {
     });
   }
 
+  // ── Duplicate Key Error (e.g., duplicate email) ──────────────
+  if (err.code === 11000) {
+    const field = Object.keys(err.keyValue)[0];
+    return res.status(409).json({
+      error: 'Conflict',
+      message: `A record with this ${field} already exists.`,
+    });
+  }
+
   // ── Generic Server Error ─────────────────────────────────────
   console.error('[ERROR]', err.stack);
   res.status(500).json({
@@ -208,9 +228,12 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`✔  Task Manager API running → http://localhost:${PORT}`);
   console.log('   Endpoints:');
-  console.log('   GET    /tasks');
-  console.log('   GET    /tasks/:id');
-  console.log('   POST   /tasks');
-  console.log('   PUT    /tasks/:id');
-  console.log('   DELETE /tasks/:id');
+  console.log('   POST   /auth/register   (public)');
+  console.log('   POST   /auth/login      (public)');
+  console.log('   GET    /auth/me         (🔒 protected)');
+  console.log('   GET    /tasks           (🔒 protected)');
+  console.log('   GET    /tasks/:id       (🔒 protected)');
+  console.log('   POST   /tasks           (🔒 protected + validated)');
+  console.log('   PUT    /tasks/:id       (🔒 protected + validated)');
+  console.log('   DELETE /tasks/:id       (🔒 protected)');
 });

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getTasks, createTask, updateTask, deleteTask } from '../services/api'
 import Spinner from './Spinner'
 import ErrorMessage from './ErrorMessage'
@@ -10,8 +11,11 @@ import Toast from './Toast'
  * Tasks — Main task management page (orchestrator).
  * Handles all CRUD state management, loading/error states,
  * and toast notifications for every operation.
+ * (Practical 7: Redirects to /login on 401 Unauthorized)
  */
 function Tasks() {
+  const navigate = useNavigate()
+
   /* ── State ── */
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
@@ -29,6 +33,15 @@ function Tasks() {
   const removeToast = useCallback((id) => {
     setToasts((prev) => prev.filter((t) => t.id !== id))
   }, [])
+
+  /* ── Supplementary Problem #2: Redirect to login on 401 ── */
+  useEffect(() => {
+    const onExpired = () => {
+      navigate('/login')
+    }
+    window.addEventListener('auth:expired', onExpired)
+    return () => window.removeEventListener('auth:expired', onExpired)
+  }, [navigate])
 
   /* ── Fetch all tasks (used on mount + after every write) ── */
   const fetchTasks = useCallback(async () => {

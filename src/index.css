@@ -1554,3 +1554,222 @@ a:hover {
     min-width: auto;
   }
 }
+
+/* ===== AUTH FORM — Login/Register (Practical 7) ===== */
+.auth-form {
+  border: 1px solid rgba(0, 255, 65, 0.25);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #050505;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+  max-width: 500px;
+  margin: 0 auto;
+  transition: box-shadow 0.4s ease;
+}
+
+.auth-form:hover {
+  box-shadow:
+    0 4px 30px rgba(0, 0, 0, 0.5),
+    0 0 20px var(--neon-green-glow);
+}
+
+/* title bar */
+.auth-form__bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.6rem 1rem;
+  background: #111;
+  border-bottom: 1px solid rgba(0, 255, 65, 0.1);
+}
+
+.auth-form__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.auth-form__dot:nth-child(1) { background: #ff5f57; }
+.auth-form__dot:nth-child(2) { background: #ffbd2e; }
+.auth-form__dot:nth-child(3) { background: #28c840; }
+
+.auth-form__bar-title {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-left: 0.6rem;
+  letter-spacing: 0.5px;
+  opacity: 0.7;
+}
+
+/* body */
+.auth-form__body {
+  padding: 1.5rem 1.75rem;
+}
+
+.auth-form__field {
+  margin-bottom: 1.25rem;
+}
+
+.auth-form__label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.4rem;
+  letter-spacing: 0.5px;
+}
+
+.auth-form__prompt {
+  color: var(--neon-green);
+  font-weight: 700;
+  margin-right: 0.4rem;
+  text-shadow: 0 0 6px var(--neon-green-glow);
+}
+
+.auth-form__required {
+  color: #ff5f57;
+  margin-left: 0.25rem;
+}
+
+.auth-form__hint {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  margin-left: 0.5rem;
+  opacity: 0.7;
+}
+
+.auth-form__input {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  background: rgba(0, 255, 65, 0.04);
+  border: 1px solid rgba(0, 255, 65, 0.15);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.auth-form__input:focus {
+  border-color: var(--neon-green);
+  box-shadow: 0 0 8px var(--neon-green-glow);
+  background: rgba(0, 255, 65, 0.06);
+}
+
+.auth-form__input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+/* error/success messages */
+.auth-form__error {
+  background: rgba(255, 95, 87, 0.08);
+  border: 1px solid rgba(255, 95, 87, 0.3);
+  border-radius: 4px;
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 1rem;
+  font-size: 0.8rem;
+  color: #ff5f57;
+}
+
+.auth-form__error-label {
+  font-weight: 700;
+  margin-right: 0.3rem;
+}
+
+.auth-form__success {
+  background: rgba(0, 255, 65, 0.08);
+  border: 1px solid rgba(0, 255, 65, 0.3);
+  border-radius: 4px;
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 1rem;
+  font-size: 0.8rem;
+  color: var(--neon-green);
+}
+
+.auth-form__success-label {
+  font-weight: 700;
+  margin-right: 0.3rem;
+}
+
+/* action buttons */
+.auth-form__actions {
+  margin-top: 1.5rem;
+}
+
+.auth-form__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.2rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.5px;
+}
+
+.auth-form__btn--submit {
+  background: rgba(0, 255, 65, 0.1);
+  border: 1px solid var(--neon-green);
+  color: var(--neon-green);
+}
+
+.auth-form__btn--submit:hover:not(:disabled) {
+  background: rgba(0, 255, 65, 0.2);
+  box-shadow: 0 0 12px var(--neon-green-glow);
+  text-shadow: 0 0 6px var(--neon-green);
+}
+
+.auth-form__btn--submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.auth-form__btn-prompt {
+  color: var(--neon-green);
+  font-weight: 700;
+  text-shadow: 0 0 6px var(--neon-green-glow);
+}
+
+/* toggle link (switch login/register) */
+.auth-form__toggle {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 255, 65, 0.1);
+  text-align: center;
+  font-size: 0.8rem;
+}
+
+.auth-form__toggle-text {
+  color: var(--text-muted);
+  margin-right: 0.4rem;
+}
+
+.auth-form__toggle-btn {
+  background: none;
+  border: none;
+  color: var(--neon-green);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: all 0.3s ease;
+}
+
+.auth-form__toggle-btn:hover {
+  text-shadow: 0 0 6px var(--neon-green);
+}
+
+/* responsive */
+@media (max-width: 600px) {
+  .auth-form {
+    margin: 0 0.5rem;
+  }
+
+  .auth-form__body {
+    padding: 1rem 1.25rem;
+  }
+}
+

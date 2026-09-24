@@ -1,11 +1,11 @@
 project_name: "Chetan Dabhi — Portfolio"
-last_updated: "2026-09-17"
+last_updated: "2026-09-24"
 overview: >
   A React + Vite single-page portfolio website with a hacker/terminal aesthetic,
-  featuring client-side routing (react-router-dom), live GitHub repo fetching,
-  a typewriter-animated About terminal, skills listing, contact form,
-  dark/light theme toggle, and a full-stack Task Manager (Practical 6)
-  wired to a Node/Express/MongoDB backend via CORS-enabled REST API.
+  featuring client-side routing, live GitHub repo fetching, a full-stack 
+  Task Manager (Practical 6 & 7) wired to a Node/Express/MongoDB backend via 
+  CORS-enabled REST API with JWT-based Authentication, and route-based code
+  splitting with React.lazy() and Suspense (Practical 8).
 
 modules:
   # ── Agent Rules ────────────────────────────────────────────────
@@ -48,12 +48,12 @@ modules:
       - "src/App.jsx"
 
   - path: "src/index.css"
-    purpose: "Global stylesheet — terminal/hacker design tokens, component styles (header, navbar, terminal, projects, spinner, error panel, footer, task-form, task-card, toast), animations, dark/light theme variables."
+    purpose: "Global stylesheet — terminal/hacker design tokens, component styles, animations, dark/light theme variables, and auth-form styling."
     exports: []
     dependencies: []
 
   - path: "src/App.jsx"
-    purpose: "Root component — holds student data, skills array, dark/light theme state, applies body theme styles, composes Header → NavBar → Routes (/, /projects, /tasks, /contact, *) → Footer."
+    purpose: "Root component — holds student data, theme state, applies body theme styles, composes Header → NavBar → Suspense(LazyFallback) → Routes (/, /projects, /tasks, /contact, /login, *) → Footer; lazy-loads route components via React.lazy() for code splitting (Practical 8)."
     exports:
       - "App"
     dependencies:
@@ -63,13 +63,23 @@ modules:
       - "src/components/Projects.jsx"
       - "src/components/Tasks.jsx"
       - "src/components/Contact.jsx"
+      - "src/components/Login.jsx"
       - "src/components/NotFound.jsx"
       - "src/components/Footer.jsx"
+      - "src/components/LazyFallback.jsx"
+      - "src/services/api.js"
 
-  # ── Practical 6 — API Service Layer ─────────────────────────────
+  # ── Practical 6 & 7 — API Service Layer ─────────────────────────
   - path: "src/services/api.js"
-    purpose: "Central API service — single BASE_URL constant and five CRUD functions (getTasks, createTask, updateTask, deleteTask) using fetch."
+    purpose: "Central API service — manages JWT token in localStorage, handles 401 redirects, and provides CRUD & auth fetch functions."
     exports:
+      - "getToken"
+      - "setToken"
+      - "clearToken"
+      - "isAuthenticated"
+      - "register"
+      - "login"
+      - "getMe"
       - "getTasks"
       - "createTask"
       - "updateTask"
@@ -95,7 +105,7 @@ modules:
       - "src/components/RepoList.jsx"
 
   - path: "src/components/Tasks.jsx"
-    purpose: "Practical 6 — Task Manager page orchestrator handling all CRUD state, loading/error per operation, toast notifications, confirmation dialog on delete, and re-fetch after every write."
+    purpose: "Practical 7 — Task Manager page orchestrator handling CRUD state, loading/error, toast notifications, and listening for auth:expired event."
     exports:
       - "Tasks"
     dependencies:
@@ -112,6 +122,13 @@ modules:
       - "Contact"
     dependencies: []
 
+  - path: "src/components/Login.jsx"
+    purpose: "Practical 7 — Terminal-styled authentication form for login and registration, interacting with auth endpoints."
+    exports:
+      - "Login"
+    dependencies:
+      - "src/services/api.js"
+
   # ── UI Components ───────────────────────────────────────────────
   - path: "src/components/Header.jsx"
     purpose: "Site header — displays student name (prop-colored) and subtitle tagline."
@@ -120,13 +137,13 @@ modules:
     dependencies: []
 
   - path: "src/components/NavBar.jsx"
-    purpose: "Navigation bar — NavLinks to /, /projects, /tasks, /contact with active-state styling, plus a dark/light theme toggle button."
+    purpose: "Navigation bar — NavLinks with active-state styling, auth toggle (Login/Logout), and a dark/light theme toggle."
     exports:
       - "NavBar"
     dependencies: []
 
   - path: "src/components/About.jsx"
-    purpose: "About section — animated terminal emulator that types out bio commands/outputs line-by-line with typewriter effect, blinking cursor, and auto-scroll."
+    purpose: "About section — animated terminal emulator that types out bio commands/outputs line-by-line with typewriter effect."
     exports:
       - "About"
     dependencies: []
@@ -144,19 +161,19 @@ modules:
     dependencies: []
 
   - path: "src/components/TaskForm.jsx"
-    purpose: "Practical 6 — Terminal-styled create/edit form with title, description, priority fields, git-themed submit/cancel buttons, and per-operation loading state."
+    purpose: "Practical 6 — Terminal-styled create/edit form with title, description, priority fields, git-themed submit/cancel buttons."
     exports:
       - "TaskForm"
     dependencies: []
 
   - path: "src/components/TaskList.jsx"
-    purpose: "Practical 6 — Renders terminal-styled task cards with priority badges, completed toggle, edit/delete actions, and empty state."
+    purpose: "Practical 6 — Renders terminal-styled task cards with priority badges, completed toggle, edit/delete actions."
     exports:
       - "TaskList"
     dependencies: []
 
   - path: "src/components/Toast.jsx"
-    purpose: "Practical 6 — Auto-dismissing toast notification component (3s timeout) with success/error variants and slide animation."
+    purpose: "Practical 6 — Auto-dismissing toast notification component (3s timeout) with success/error variants."
     exports:
       - "Toast"
     dependencies: []
@@ -185,25 +202,37 @@ modules:
       - "NotFound"
     dependencies: []
 
+  - path: "src/components/LazyFallback.jsx"
+    purpose: "Practical 8 — Terminal-styled Suspense fallback UI with animated progress bar and scanline, rendered while lazy-loaded route chunks download."
+    exports:
+      - "LazyFallback"
+    dependencies: []
+
+  # ── Practical 8 — Performance Documentation ──────────────────────
+  - path: "docs/performance-comparison.md"
+    purpose: "Practical 8 — Before/after build output comparison, metrics table, and analysis explaining code splitting impact."
+    exports: []
+    dependencies: []
+
   # ── Static Assets ───────────────────────────────────────────────
   - path: "public/kali-logo.png"
     purpose: "Kali Linux logo image asset (unused in current components)."
     exports: []
     dependencies: []
 
-  # ── Practical 5 + 6 — Task Manager REST API (MongoDB Edition) ──
+  # ── Practical 5, 6, 7 — Task Manager REST API ───────────────────
   - path: "task-manager-api/package.json"
-    purpose: "Node project config — defines Express, Mongoose, cors, and dotenv dependencies with start/dev scripts."
+    purpose: "Node project config — defines Express, Mongoose, cors, dotenv, bcryptjs, jsonwebtoken dependencies."
     exports: []
     dependencies: []
 
   - path: "task-manager-api/.env"
-    purpose: "Environment variables — MongoDB Atlas connection string and port (git-ignored)."
+    purpose: "Environment variables — MongoDB URI, PORT, and JWT_SECRET."
     exports: []
     dependencies: []
 
   - path: "task-manager-api/.env.example"
-    purpose: "Template for .env — redacted credentials for collaborators."
+    purpose: "Template for .env variables."
     exports: []
     dependencies: []
 
@@ -213,21 +242,52 @@ modules:
     dependencies: []
 
   - path: "task-manager-api/config/db.js"
-    purpose: "MongoDB connection module — connects to Atlas via Mongoose, logs host on success, exits on failure."
+    purpose: "MongoDB connection module — connects to Atlas via Mongoose."
     exports:
       - "connectDB"
     dependencies: []
 
   - path: "task-manager-api/models/Task.js"
-    purpose: "Mongoose Task schema — 5 fields (title, description, completed, priority, createdAt) with required/enum/default constraints and pre-save trim hook."
+    purpose: "Mongoose Task schema — validates title, description, completed, priority, createdAt."
     exports:
       - "Task (model)"
     dependencies: []
 
+  - path: "task-manager-api/models/User.js"
+    purpose: "Mongoose User schema — validates name, email, and password."
+    exports:
+      - "User (model)"
+    dependencies: []
+
+  - path: "task-manager-api/middleware/auth.js"
+    purpose: "JWT authentication middleware — verifies token from Authorization header."
+    exports:
+      - "authMiddleware"
+    dependencies: []
+
+  - path: "task-manager-api/middleware/validate.js"
+    purpose: "Input validation middleware — checks request body for register, login, and tasks endpoints."
+    exports:
+      - "validateRegister"
+      - "validateLogin"
+      - "validateTask"
+    dependencies: []
+
+  - path: "task-manager-api/routes/auth.js"
+    purpose: "Express router for authentication — handles /register, /login, and /me endpoints."
+    exports:
+      - "router"
+    dependencies:
+      - "task-manager-api/models/User.js"
+      - "task-manager-api/middleware/auth.js"
+      - "task-manager-api/middleware/validate.js"
+
   - path: "task-manager-api/server.js"
-    purpose: "Express REST API — CORS-enabled, MongoDB-backed CRUD (GET/GET:id/POST/PUT/DELETE /tasks), Mongoose ODM, request logging, Content-Type validation, ObjectId validation, structured error handling."
+    purpose: "Express REST API — handles middleware pipeline, connects DB, routes auth and tasks, handles global errors."
     exports: []
     dependencies:
       - "task-manager-api/config/db.js"
       - "task-manager-api/models/Task.js"
-      - "task-manager-api/package.json"
+      - "task-manager-api/routes/auth.js"
+      - "task-manager-api/middleware/auth.js"
+      - "task-manager-api/middleware/validate.js"
