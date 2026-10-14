@@ -1,5 +1,5 @@
 project_name: "Chetan Dabhi — Portfolio"
-last_updated: "2026-09-24"
+last_updated: "2026-10-06"
 overview: >
   A React + Vite single-page portfolio website with a hacker/terminal aesthetic,
   featuring client-side routing, live GitHub repo fetching, a full-stack 
@@ -282,8 +282,14 @@ modules:
       - "task-manager-api/middleware/auth.js"
       - "task-manager-api/middleware/validate.js"
 
+  - path: "task-manager-api/utils/cache.js"
+    purpose: "In-memory caching utility using node-cache with hit/miss tracking."
+    exports:
+      - "cache"
+    dependencies: []
+
   - path: "task-manager-api/server.js"
-    purpose: "Express REST API — handles middleware pipeline, connects DB, routes auth and tasks, handles global errors."
+    purpose: "Express REST API — handles middleware pipeline, connects DB, routes auth and tasks (with in-memory caching), handles global errors."
     exports: []
     dependencies:
       - "task-manager-api/config/db.js"
@@ -291,3 +297,4 @@ modules:
       - "task-manager-api/routes/auth.js"
       - "task-manager-api/middleware/auth.js"
       - "task-manager-api/middleware/validate.js"
+      - "task-manager-api/utils/cache.js"

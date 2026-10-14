@@ -15,6 +15,7 @@ const Task = require('./models/Task');
 const authRoutes = require('./routes/auth');
 const authMiddleware = require('./middleware/auth');
 const { validateTask } = require('./middleware/validate');
+const cache = require('./utils/cache');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -74,23 +75,50 @@ function validateObjectId(req, res, next) {
 // CRUD ROUTE HANDLERS (Practical 7: All protected by authMiddleware)
 // =============================================================
 
-// GET /tasks — Retrieve all tasks (🔒 Protected)
+// GET /tasks — Retrieve all tasks (🔒 Protected + ⚡ Cached)
 app.get('/tasks', authMiddleware, async (req, res, next) => {
   try {
+    // Check cache first
+    const cachedTasks = cache.get('all_tasks');
+    if (cachedTasks) {
+      return res.status(200).json({
+        success: true,
+        count: cachedTasks.length,
+        data: cachedTasks,
+        cached: true
+      });
+    }
+
     const tasks = await Task.find().sort({ createdAt: -1 });
+    
+    // Store in cache
+    cache.set('all_tasks', tasks);
+
     res.status(200).json({
       success: true,
       count: tasks.length,
       data: tasks,
+      cached: false
     });
   } catch (err) {
     next(err);
   }
 });
 
-// GET /tasks/:id — Retrieve a single task by ID (🔒 Protected)
+// GET /tasks/:id — Retrieve a single task by ID (🔒 Protected + ⚡ Cached)
 app.get('/tasks/:id', authMiddleware, validateObjectId, async (req, res, next) => {
   try {
+    const cacheKey = `task_${req.params.id}`;
+    const cachedTask = cache.get(cacheKey);
+    
+    if (cachedTask) {
+      return res.status(200).json({
+        success: true,
+        data: cachedTask,
+        cached: true
+      });
+    }
+
     const task = await Task.findById(req.params.id);
 
     if (!task) {
@@ -100,9 +128,12 @@ app.get('/tasks/:id', authMiddleware, validateObjectId, async (req, res, next) =
       });
     }
 
+    cache.set(cacheKey, task);
+
     res.status(200).json({
       success: true,
       data: task,
+      cached: false
     });
   } catch (err) {
     next(err);
@@ -113,6 +144,10 @@ app.get('/tasks/:id', authMiddleware, validateObjectId, async (req, res, next) =
 app.post('/tasks', authMiddleware, validateTask, async (req, res, next) => {
   try {
     const newTask = await Task.create(req.body);
+    
+    // Invalidate cache
+    cache.del('all_tasks');
+
     res.status(201).json({
       success: true,
       message: 'Task created successfully',
@@ -139,6 +174,10 @@ app.put('/tasks/:id', authMiddleware, validateObjectId, validateTask, async (req
       });
     }
 
+    // Invalidate caches
+    cache.del('all_tasks');
+    cache.del(`task_${req.params.id}`);
+
     res.status(200).json({
       success: true,
       message: 'Task updated successfully',
@@ -161,6 +200,10 @@ app.delete('/tasks/:id', authMiddleware, validateObjectId, async (req, res, next
       });
     }
 
+    // Invalidate caches
+    cache.del('all_tasks');
+    cache.del(`task_${req.params.id}`);
+
     res.status(200).json({
       success: true,
       message: 'Task deleted successfully',
@@ -169,6 +212,15 @@ app.delete('/tasks/:id', authMiddleware, validateObjectId, async (req, res, next
   } catch (err) {
     next(err);
   }
+});
+
+// GET /debug/cache — Cache stats (Supplementary Problem)
+app.get('/debug/cache', (req, res) => {
+  res.status(200).json({
+    success: true,
+    stats: cache.stats,
+    keys: cache.keys()
+  });
 });
 
 // =============================================================
