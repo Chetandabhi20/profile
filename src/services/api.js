@@ -4,7 +4,9 @@
 // + JWT token management and auth endpoints
 // ============================================================
 
-const BASE_URL = 'http://localhost:5000'
+const BASE_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:5000'
+  : `http://${window.location.hostname}:5000`
 
 // ── Token Management (localStorage) ─────────────────────────
 // Supplementary Problem #3: Token stored in localStorage,

@@ -1,12 +1,13 @@
 project_name: "Chetan Dabhi — Portfolio"
-last_updated: "2026-10-15"
+last_updated: "2026-10-22"
 overview: >
   A React + Vite single-page portfolio website with a hacker/terminal aesthetic,
   featuring client-side routing, live GitHub repo fetching, a full-stack 
   Task Manager (Practical 6 & 7) wired to a Node/Express/MongoDB backend via 
   CORS-enabled REST API with JWT-based Authentication, event-driven async
-  notifications using EventEmitter (Practical 10), and route-based code
-  splitting with React.lazy() and Suspense (Practical 8).
+  notifications using EventEmitter (Practical 10), route-based code
+  splitting with React.lazy() and Suspense (Practical 8), and full Docker
+  containerization with Docker Compose orchestration (Practical 11).
 
 modules:
   # ── Agent Rules ────────────────────────────────────────────────
@@ -72,7 +73,7 @@ modules:
 
   # ── Practical 6 & 7 — API Service Layer ─────────────────────────
   - path: "src/services/api.js"
-    purpose: "Central API service — manages JWT token in localStorage, handles 401 redirects, and provides CRUD & auth fetch functions."
+    purpose: "Central API service — manages JWT token in localStorage, handles 401 redirects, provides CRUD & auth fetch functions; BASE_URL adapts for Docker/local dev."
     exports:
       - "getToken"
       - "setToken"
@@ -314,3 +315,36 @@ modules:
     exports: []
     dependencies:
       - "task-manager-api/events/taskEvents.js"
+
+  # ── Practical 11 — Docker Containerization ─────────────────────
+  - path: "Dockerfile"
+    purpose: "Practical 11 — Multi-stage frontend Dockerfile: Stage 1 builds React app, Stage 2 serves via Vite preview on port 5173."
+    exports: []
+    dependencies:
+      - "package.json"
+
+  - path: ".dockerignore"
+    purpose: "Practical 11 — Excludes node_modules, dist, .env, .git, and task-manager-api from the frontend Docker build context."
+    exports: []
+    dependencies: []
+
+  - path: "task-manager-api/Dockerfile"
+    purpose: "Practical 11 — Backend Dockerfile using node:18, installs deps and runs server.js on port 5000."
+    exports: []
+    dependencies:
+      - "task-manager-api/package.json"
+
+  - path: "task-manager-api/.dockerignore"
+    purpose: "Practical 11 — Excludes node_modules, .env, and .git from the backend Docker build context."
+    exports: []
+    dependencies: []
+
+  - path: "docker-compose.yml"
+    purpose: "Practical 11 — Orchestrates 3 services (frontend, backend, mongodb) with bridge network, port mappings, named volume, and depends_on ordering."
+    exports: []
+    dependencies:
+      - "Dockerfile"
+      - "task-manager-api/Dockerfile"
+
+
+
