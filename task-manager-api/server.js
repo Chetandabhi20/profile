@@ -25,8 +25,19 @@ require('./events/taskListeners');   // registers all listeners at startup
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ── Connect to MongoDB ──────────────────────────────────────
-connectDB();
+// ── Connect to MongoDB (skip during test execution to prevent timeouts) ──
+if (process.env.NODE_ENV !== 'test') {
+  connectDB();
+}
+
+// ── Health Check Endpoint (CI/CD monitoring & automated pipeline test) ───
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  });
+});
 
 // =============================================================
 // MIDDLEWARE PIPELINE (order matters!)
@@ -290,18 +301,22 @@ app.use((err, req, res, next) => {
 });
 
 // =============================================================
-// START SERVER
+// START SERVER (only when executed directly, not during tests)
 // =============================================================
-app.listen(PORT, () => {
-  console.log(`✔  Task Manager API running → http://localhost:${PORT}`);
-  console.log('   Endpoints:');
-  console.log('   POST   /auth/register   (public)');
-  console.log('   POST   /auth/login      (public)');
-  console.log('   GET    /auth/me         (🔒 protected)');
-  console.log('   GET    /tasks           (🔒 protected)');
-  console.log('   GET    /tasks/:id       (🔒 protected)');
-  console.log('   POST   /tasks           (🔒 protected + validated)');
-  console.log('   PUT    /tasks/:id       (🔒 protected + validated)');
-  console.log('   DELETE /tasks/:id       (🔒 protected)');
-  console.log('   📡 EventEmitter: task-created, task-deleted listeners active');
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`✔  Task Manager API running → http://localhost:${PORT}`);
+    console.log('   Endpoints:');
+    console.log('   POST   /auth/register   (public)');
+    console.log('   POST   /auth/login      (public)');
+    console.log('   GET    /auth/me         (🔒 protected)');
+    console.log('   GET    /tasks           (🔒 protected)');
+    console.log('   GET    /tasks/:id       (🔒 protected)');
+    console.log('   POST   /tasks           (🔒 protected + validated)');
+    console.log('   PUT    /tasks/:id       (🔒 protected + validated)');
+    console.log('   DELETE /tasks/:id       (🔒 protected)');
+    console.log('   📡 EventEmitter: task-created, task-deleted listeners active');
+  });
+}
+
+module.exports = app;

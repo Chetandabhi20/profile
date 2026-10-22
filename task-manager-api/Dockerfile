@@ -2,7 +2,7 @@
 # Practical 11 — Backend Dockerfile (Node/Express API)
 # ============================================================
 
-FROM node:18
+FROM node:22
 
 WORKDIR /app
 

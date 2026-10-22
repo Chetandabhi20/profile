@@ -6,8 +6,9 @@ overview: >
   Task Manager (Practical 6 & 7) wired to a Node/Express/MongoDB backend via 
   CORS-enabled REST API with JWT-based Authentication, event-driven async
   notifications using EventEmitter (Practical 10), route-based code
-  splitting with React.lazy() and Suspense (Practical 8), and full Docker
-  containerization with Docker Compose orchestration (Practical 11).
+  splitting with React.lazy() and Suspense (Practical 8), full Docker
+  containerization with Docker Compose orchestration (Practical 11), and an
+  automated CI/CD pipeline using GitHub Actions and Jest (Practical 12).
 
 modules:
   # ── Agent Rules ────────────────────────────────────────────────
@@ -25,12 +26,12 @@ modules:
 
   # ── Build & Config ──────────────────────────────────────────────
   - path: "package.json"
-    purpose: "Defines project metadata, scripts (dev/build/preview), and dependencies (React 19, react-router-dom, Vite 8)."
+    purpose: "Defines project metadata, scripts (dev/build/preview/test delegation), and dependencies (React 19, react-router-dom, Vite 8)."
     exports: []
     dependencies: []
 
   - path: "vite.config.js"
-    purpose: "Vite build configuration — enables the React plugin."
+    purpose: "Vite build configuration — enables the React plugin and sets preview port to 5173."
     exports:
       - "default (defineConfig)"
     dependencies: []
@@ -224,7 +225,7 @@ modules:
 
   # ── Practical 5, 6, 7 — Task Manager REST API ───────────────────
   - path: "task-manager-api/package.json"
-    purpose: "Node project config — defines Express, Mongoose, cors, dotenv, bcryptjs, jsonwebtoken dependencies."
+    purpose: "Node project config — defines Express, Mongoose, cors, dotenv, bcryptjs, jsonwebtoken, jest, and supertest dependencies and scripts."
     exports: []
     dependencies: []
 
@@ -291,8 +292,9 @@ modules:
     dependencies: []
 
   - path: "task-manager-api/server.js"
-    purpose: "Express REST API — handles middleware pipeline, connects DB, routes auth and tasks (with caching), emits EventEmitter events on task create/delete, handles global errors."
-    exports: []
+    purpose: "Express REST API — handles middleware pipeline, routes auth/tasks, emits events, exposes /health check, and exports app for CI/CD automated testing."
+    exports:
+      - "app"
     dependencies:
       - "task-manager-api/config/db.js"
       - "task-manager-api/models/Task.js"
@@ -329,7 +331,7 @@ modules:
     dependencies: []
 
   - path: "task-manager-api/Dockerfile"
-    purpose: "Practical 11 — Backend Dockerfile using node:18, installs deps and runs server.js on port 5000."
+    purpose: "Practical 11 — Backend Dockerfile using node:22, installs deps and runs server.js on port 5000."
     exports: []
     dependencies:
       - "task-manager-api/package.json"
@@ -346,5 +348,21 @@ modules:
       - "Dockerfile"
       - "task-manager-api/Dockerfile"
 
+  # ── Practical 12 — CI/CD Pipeline & Automated Testing ──────────
+  - path: ".github/workflows/ci.yml"
+    purpose: "Practical 12 — GitHub Actions workflow automating npm install and Jest test suite on push and pull_request to main."
+    exports: []
+    dependencies:
+      - "task-manager-api/package.json"
 
+  - path: "task-manager-api/tests/api.test.js"
+    purpose: "Practical 12 — Jest and Supertest integration test suite asserting health check, auth protection, cache metrics, and 404 responses."
+    exports: []
+    dependencies:
+      - "task-manager-api/server.js"
+      - "task-manager-api/utils/cache.js"
 
+  - path: "README.md"
+    purpose: "Repository documentation displaying live GitHub Actions CI pipeline status badge, architectural diagrams, and local test execution guide."
+    exports: []
+    dependencies: []
