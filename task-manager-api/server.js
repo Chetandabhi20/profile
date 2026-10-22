@@ -1,7 +1,8 @@
 // ============================================================
-// Practical 5 + 6 + 7 — Task Management RESTful API
+// Practical 5 + 6 + 7 + 10 — Task Management RESTful API
 // Express.js | Mongoose ODM | MongoDB Atlas | CORS enabled
 // + JWT Authentication | Input Validation | Middleware Pipeline
+// + Event-Driven Async Notifications (EventEmitter)
 // ============================================================
 
 require('dotenv').config();
@@ -16,6 +17,10 @@ const authRoutes = require('./routes/auth');
 const authMiddleware = require('./middleware/auth');
 const { validateTask } = require('./middleware/validate');
 const cache = require('./utils/cache');
+
+// ── Practical 10 Imports ────────────────────────────────────
+const taskEvents = require('./events/taskEvents');
+require('./events/taskListeners');   // registers all listeners at startup
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -140,7 +145,7 @@ app.get('/tasks/:id', authMiddleware, validateObjectId, async (req, res, next) =
   }
 });
 
-// POST /tasks — Create a new task (🔒 Protected + ✅ Validated)
+// POST /tasks — Create a new task (🔒 Protected + ✅ Validated + 📡 Event)
 app.post('/tasks', authMiddleware, validateTask, async (req, res, next) => {
   try {
     const newTask = await Task.create(req.body);
@@ -148,11 +153,16 @@ app.post('/tasks', authMiddleware, validateTask, async (req, res, next) => {
     // Invalidate cache
     cache.del('all_tasks');
 
+    // ── Practical 10: Respond FIRST, then emit ─────────────
+    console.log(`[API] Response sent at ${new Date().toISOString()}`);
     res.status(201).json({
       success: true,
       message: 'Task created successfully',
       data: newTask,
     });
+
+    // Emit event AFTER response — handler runs asynchronously
+    taskEvents.emit('task-created', newTask);
   } catch (err) {
     next(err);
   }
@@ -188,7 +198,7 @@ app.put('/tasks/:id', authMiddleware, validateObjectId, validateTask, async (req
   }
 });
 
-// DELETE /tasks/:id — Delete a task (🔒 Protected)
+// DELETE /tasks/:id — Delete a task (🔒 Protected + 📡 Event)
 app.delete('/tasks/:id', authMiddleware, validateObjectId, async (req, res, next) => {
   try {
     const task = await Task.findByIdAndDelete(req.params.id);
@@ -204,11 +214,16 @@ app.delete('/tasks/:id', authMiddleware, validateObjectId, async (req, res, next
     cache.del('all_tasks');
     cache.del(`task_${req.params.id}`);
 
+    // ── Practical 10: Respond FIRST, then emit ─────────────
+    console.log(`[API] Delete response sent at ${new Date().toISOString()}`);
     res.status(200).json({
       success: true,
       message: 'Task deleted successfully',
       data: task,
     });
+
+    // Emit event AFTER response — handler runs asynchronously
+    taskEvents.emit('task-deleted', task);
   } catch (err) {
     next(err);
   }
@@ -288,4 +303,5 @@ app.listen(PORT, () => {
   console.log('   POST   /tasks           (🔒 protected + validated)');
   console.log('   PUT    /tasks/:id       (🔒 protected + validated)');
   console.log('   DELETE /tasks/:id       (🔒 protected)');
+  console.log('   📡 EventEmitter: task-created, task-deleted listeners active');
 });
